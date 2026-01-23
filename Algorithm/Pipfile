@@ -21,6 +21,10 @@ imutils = "~=0.5.4"
 python-tsp = "*"
 flask = "*"
 flask-cors = "*"
+ipython = "*"
+psutil = "*"
+grid = "*"
+ultralytics = "*"
 
 [dev-packages]
 
