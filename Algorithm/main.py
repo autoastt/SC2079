@@ -1,13 +1,32 @@
 import time
+import os
+import cv2
+from datetime import datetime
 from algo.algo import MazeSolver 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from model import *
+# from model import *
 from helper import command_generator
+from ultralytics import YOLO
+from PIL import Image
+import io
+import os
 
 app = Flask(__name__)
 CORS(app)
-model = load_model()
+# model = load_model()
+# Class names
+class_names = [
+    'A','B','Bullseye','C','D','E','F','G','H','S','T','U','V','W','X','Y','Z',
+    'circle','down','eight','five','four','left','nine','one','right',
+    'seven','six','three','two','up'
+]
+
+# Load model
+print("Loading model...")
+model = YOLO('bestL160epoch.pt')
+print("Model loaded successfully!")
+
 # model = None
 @app.route('/status', methods=['GET'])
 def status():
@@ -49,6 +68,7 @@ def path_finding():
     
     # Based on the shortest path, generate commands for the robot
     commands = command_generator(optimal_path, obstacles)
+    print(f"Command: {commands}")
 
     # Get the starting location and add it to path_results
     path_results = [optimal_path[0].get_dict()]
@@ -75,6 +95,92 @@ def path_finding():
         "error": None
     })
 
+@app.route('/image-new', methods=['POST'])
+def predict_image():
+    """
+    Prediction function for image detection
+    Expects:
+        - file: Image file
+        - confidence: Confidence threshold (0-1), optional, default 0.25
+    Returns:
+        JSON with detection results
+    """
+    # Check if file is in request
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    # Read file content once
+    file_content = file.read()
+    
+    # Save original image to uploads folder
+    os.makedirs('uploads', exist_ok=True)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    # Get filename without extension and extension
+    filename_without_ext = os.path.splitext(file.filename)[0]
+    file_ext = os.path.splitext(file.filename)[1]
+    
+    upload_filename = f'uploads/{timestamp}_{filename_without_ext}{file_ext}'
+    with open(upload_filename, 'wb') as f:
+        f.write(file_content)
+    
+    # Get confidence threshold from request, default to 0.25
+    confidence = float(request.form.get('confidence', 0.25))
+    
+    # Convert file to PIL Image
+    image = Image.open(io.BytesIO(file_content))
+    
+    # Run prediction
+    results = model.predict(
+        source=image,
+        conf=confidence,
+        save=False
+    )
+    
+    # Get annotated image with bounding boxes
+    annotated_img = results[0].plot()
+    
+    # Save annotated image
+    os.makedirs('own_results', exist_ok=True)
+    output_filename = f'own_results/result_{timestamp}_{filename_without_ext}.jpg'
+    cv2.imwrite(output_filename, annotated_img)
+    
+    # Get detection details
+    boxes = results[0].boxes
+    
+    detections = []
+    if len(boxes) > 0:
+        for i, box in enumerate(boxes):
+            cls_idx = int(box.cls.cpu().numpy()[0])
+            conf = float(box.conf.cpu().numpy()[0])
+            class_name = class_names[cls_idx]
+            
+            detections.append({
+                "class": class_name,
+                "confidence": conf
+            })
+        
+        result = {
+            "success": True,
+            "count": len(boxes),
+            "detections": detections,
+            "result_image": output_filename
+        }
+    else:
+        result = {
+            "success": False,
+            "count": 0,
+            "detections": [],
+            "message": "No objects detected. Try lowering the confidence threshold.",
+            "result_image": output_filename
+        }
+    
+    return jsonify(result)
 
 @app.route('/image', methods=['POST'])
 def image_predict():
