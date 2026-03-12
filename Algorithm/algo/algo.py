@@ -218,13 +218,17 @@ class MazeSolver:
             int: safe cost
         """
         for ob in self.grid.obstacles:
-            if abs(ob.x-x) <= 2 and abs(ob.y-y) <= 2:
+            # 2x2 obstacle: measure from nearest cell in the bounding box
+            dx = max(ob.x - x, 0, x - (ob.x + 1))
+            dy = max(ob.y - y, 0, y - (ob.y + 1))
+            # Thresholds doubled for 40x40 grid (5cm/cell) vs original 20x20 (10cm/cell)
+            if dx <= 4 and dy <= 4:
                 return SAFE_COST
             
-            if abs(ob.x-x) == 1 and abs(ob.y-y) == 2:
+            if dx == 2 and dy == 4:
                 return SAFE_COST
             
-            if abs(ob.x-x) == 2 and abs(ob.y-y) == 1:
+            if dx == 4 and dy == 2:
                 return SAFE_COST
 
         return 0

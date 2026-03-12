@@ -53,11 +53,19 @@ def path_finding():
     robot_x, robot_y = content['robot_x'], content['robot_y']
     robot_direction = int(content['robot_dir'])
 
-    # Initialize MazeSolver object with robot size of 20x20, bottom left corner of robot at (1,1), facing north, and whether to use a big turn or not.
-    maze_solver = MazeSolver(20, 20, robot_x, robot_y, robot_direction, big_turn=None)
+    # Input is in 20x20 coordinates; scale ×2 to match the internal 40x40 grid (5cm/cell)
+    robot_x_scaled = robot_x * 2
+    robot_y_scaled = robot_y * 2
+    obstacles_scaled = [
+        {**ob, 'x': ob['x'] * 2, 'y': ob['y'] * 2}
+        for ob in obstacles
+    ]
+
+    # Initialize MazeSolver object with 40x40 grid (5cm/cell), robot position, and whether to use a big turn.
+    maze_solver = MazeSolver(40, 40, robot_x_scaled, robot_y_scaled, robot_direction, big_turn=None)
 
     # Add each obstacle into the MazeSolver. Each obstacle is defined by its x,y positions, its direction, and its id
-    for ob in obstacles:
+    for ob in obstacles_scaled:
         maze_solver.add_obstacle(ob['x'], ob['y'], ob['d'], ob['id'])
 
     start = time.time()
@@ -67,7 +75,8 @@ def path_finding():
     print(f"Distance to travel: {distance} units")
     
     # Based on the shortest path, generate commands for the robot
-    commands = command_generator(optimal_path, obstacles)
+    # Use scaled obstacles so SNAP direction comparisons match the 40x40 path coordinates
+    commands = command_generator(optimal_path, obstacles_scaled)
     print(f"Command: {commands}")
 
     # Get the starting location and add it to path_results
@@ -80,9 +89,9 @@ def path_finding():
         if command.startswith("FIN"):
             continue
         elif command.startswith("FW") or command.startswith("FS"):
-            i += int(command[2:]) // 10
+            i += int(command[2:]) // 5
         elif command.startswith("BW") or command.startswith("BS"):
-            i += int(command[2:]) // 10
+            i += int(command[2:]) // 5
         else:
             i += 1
         path_results.append(optimal_path[i].get_dict())

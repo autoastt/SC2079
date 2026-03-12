@@ -28,7 +28,8 @@ const DirectionToString = {
 
 const transformCoord = (x, y) => {
   // Change the coordinate system from (0, 0) at top left to (0, 0) at bottom left
-  return { x: 19 - y, y: x };
+  // Updated for 40x40 grid (was 19 for 20x20)
+  return { x: 39 - y, y: x };
 };
 
 function classNames(...classes) {
@@ -37,13 +38,13 @@ function classNames(...classes) {
 
 export default function Simulator() {
   const [robotState, setRobotState] = useState({
-    x: 1,
-    y: 1,
+    x: 2,
+    y: 2,
     d: Direction.NORTH,
     s: -1,
   });
-  const [robotX, setRobotX] = useState(1);
-  const [robotY, setRobotY] = useState(1);
+  const [robotX, setRobotX] = useState(2);
+  const [robotY, setRobotY] = useState(2);
   const [robotDir, setRobotDir] = useState(0);
   const [obstacles, setObstacles] = useState([]);
   const [obXInput, setObXInput] = useState(0);
@@ -69,37 +70,28 @@ export default function Simulator() {
     let markerX = 0;
     let markerY = 0;
 
+    // Robot is 25cm x 25cm = 5x5 cells at 5cm/cell (40x40 grid)
+    // Direction marker sits at the outermost edge facing the robot's direction
     if (Number(robotState.d) === Direction.NORTH) {
-      markerY++;
+      markerY += 2;
     } else if (Number(robotState.d) === Direction.EAST) {
-      markerX++;
+      markerX += 2;
     } else if (Number(robotState.d) === Direction.SOUTH) {
-      markerY--;
+      markerY -= 2;
     } else if (Number(robotState.d) === Direction.WEST) {
-      markerX--;
+      markerX -= 2;
     }
 
-    // Go from i = -1 to i = 1
-    for (let i = -1; i < 2; i++) {
-      // Go from j = -1 to j = 1
-      for (let j = -1; j < 2; j++) {
-        // Transform the coordinates to our coordinate system where (0, 0) is at the bottom left
+    // 5x5 footprint: i and j from -2 to 2
+    for (let i = -2; i < 3; i++) {
+      for (let j = -2; j < 3; j++) {
         const coord = transformCoord(robotState.x + i, robotState.y + j);
-        // If the cell is the marker cell, add the robot state to the cell
+        // Skip cells that fall outside the 40x40 grid
+        if (coord.x < 0 || coord.x >= 40 || coord.y < 0 || coord.y >= 40) continue;
         if (markerX === i && markerY === j) {
-          robotCells.push({
-            x: coord.x,
-            y: coord.y,
-            d: robotState.d,
-            s: robotState.s,
-          });
+          robotCells.push({ x: coord.x, y: coord.y, d: robotState.d, s: robotState.s });
         } else {
-          robotCells.push({
-            x: coord.x,
-            y: coord.y,
-            d: null,
-            s: -1,
-          });
+          robotCells.push({ x: coord.x, y: coord.y, d: null, s: -1 });
         }
       }
     }
@@ -108,55 +100,55 @@ export default function Simulator() {
   };
 
   const onChangeX = (event) => {
-    // If the input is an integer and is in the range [0, 19], set ObXInput to the input
+    // If the input is an integer and is in the range [0, 39], set ObXInput to the input
     if (Number.isInteger(Number(event.target.value))) {
       const nb = Number(event.target.value);
-      if (0 <= nb && nb < 20) {
+      if (0 <= nb && nb < 40) {
         setObXInput(nb);
         return;
       }
     }
-    // If the input is not an integer or is not in the range [0, 19], set the input to 0
+    // If the input is not an integer or is not in the range [0, 39], set the input to 0
     setObXInput(0);
   };
 
   const onChangeY = (event) => {
-    // If the input is an integer and is in the range [0, 19], set ObYInput to the input
+    // If the input is an integer and is in the range [0, 39], set ObYInput to the input
     if (Number.isInteger(Number(event.target.value))) {
       const nb = Number(event.target.value);
-      if (0 <= nb && nb <= 19) {
+      if (0 <= nb && nb <= 39) {
         setObYInput(nb);
         return;
       }
     }
-    // If the input is not an integer or is not in the range [0, 19], set the input to 0
+    // If the input is not an integer or is not in the range [0, 39], set the input to 0
     setObYInput(0);
   };
 
   const onChangeRobotX = (event) => {
-    // If the input is an integer and is in the range [1, 18], set RobotX to the input
+    // If the input is an integer and is in the range [2, 37], set RobotX to the input
     if (Number.isInteger(Number(event.target.value))) {
       const nb = Number(event.target.value);
-      if (1 <= nb && nb < 19) {
+      if (2 <= nb && nb <= 37) {
         setRobotX(nb);
         return;
       }
     }
-    // If the input is not an integer or is not in the range [1, 18], set the input to 1
-    setRobotX(1);
+    // If the input is not valid, set the input to 2
+    setRobotX(2);
   };
 
   const onChangeRobotY = (event) => {
-    // If the input is an integer and is in the range [1, 18], set RobotY to the input
+    // If the input is an integer and is in the range [2, 37], set RobotY to the input
     if (Number.isInteger(Number(event.target.value))) {
       const nb = Number(event.target.value);
-      if (1 <= nb && nb < 19) {
+      if (2 <= nb && nb <= 37) {
         setRobotY(nb);
         return;
       }
     }
-    // If the input is not an integer or is not in the range [1, 18], set the input to 1
-    setRobotY(1);
+    // If the input is not valid, set the input to 2
+    setRobotY(2);
   };
 
   const onClickObstacle = () => {
@@ -216,10 +208,14 @@ export default function Simulator() {
       }
     }
     
-    // Check if obstacle already exists at this position
+    // Check if obstacle already exists at this position (any of the 4 cells of a 2x2 obstacle)
     for (const ob of obstacles) {
-      const obTransformed = transformCoord(ob.x, ob.y);
-      if (obTransformed.x === x && obTransformed.y === y) {
+      const rowBottom = 39 - ob.y;
+      const rowTop    = 38 - ob.y;
+      const colLeft   = ob.x;
+      const colRight  = ob.x + 1;
+
+      if ((x === rowBottom || x === rowTop) && (y === colLeft || y === colRight)) {
         // Cycle through directions instead of removing
         const directions = [ObDirection.NORTH, ObDirection.EAST, ObDirection.SOUTH, ObDirection.WEST, ObDirection.SKIP];
         const currentIndex = directions.indexOf(ob.d);
@@ -235,12 +231,12 @@ export default function Simulator() {
     
     // Add new obstacle - convert grid coordinates back to original
     // The grid renders with transformed coordinates, so we need to reverse it
-    // transformCoord does: { x: 19 - y, y: x }
-    // So to reverse: if grid shows (x, y), original is (y, 19 - x)
+    // transformCoord does: { x: 39 - y, y: x }
+    // So to reverse: if grid shows (x, y), original is (y, 39 - x)
     const newObstacles = [...obstacles];
     newObstacles.push({
       x: y,           // original x = grid y
-      y: 19 - x,      // original y = 19 - grid x
+      y: 39 - x,      // original y = 39 - grid x
       d: ObDirection.NORTH,  // Default direction, can be changed by clicking again
       id: generateNewID(),
     });
@@ -254,12 +250,12 @@ export default function Simulator() {
     const distance = command.substring(2);
     
     const explanations = {
-      'FW': `Move forward ${distance}cm`,
-      'BW': `Move backward ${distance}cm`,
-      'FR': `Turn forward-right ${distance}cm`,
-      'FL': `Turn forward-left ${distance}cm`,
-      'BR': `Turn backward-right ${distance}cm`,
-      'BL': `Turn backward-left ${distance}cm`,
+      'FW': `Move forward ${parseInt(distance, 10)}cm`,
+      'BW': `Move backward ${parseInt(distance, 10)}cm`,
+      'FR': `Turn forward-right`,
+      'FL': `Turn forward-left`,
+      'BR': `Turn backward-right`,
+      'BL': `Turn backward-left`,
     };
     
     return explanations[cmdType] || command;
@@ -304,11 +300,10 @@ export default function Simulator() {
   };
 
   const onResetAll = () => {
-    // Reset all the states
-    setRobotX(1);
+    setRobotX(2);
     setRobotDir(0);
-    setRobotY(1);
-    setRobotState({ x: 1, y: 1, d: Direction.NORTH, s: -1 });
+    setRobotY(2);
+    setRobotState({ x: 2, y: 2, d: Direction.NORTH, s: -1 });
     setPath([]);
     setCommands([]);
     setPage(0);
@@ -316,127 +311,114 @@ export default function Simulator() {
   };
 
   const onReset = () => {
-    // Reset all the states
-    setRobotX(1);
+    setRobotX(2);
     setRobotDir(0);
-    setRobotY(1);
-    setRobotState({ x: 1, y: 1, d: Direction.NORTH, s: -1 });
+    setRobotY(2);
+    setRobotState({ x: 2, y: 2, d: Direction.NORTH, s: -1 });
     setPath([]);
     setCommands([]);
     setPage(0);
   };
 
   const renderGrid = () => {
-    // Initialize the empty rows array
-    const rows = [];
-
-    const baseStyle = {
-      width: 25,
-      height: 25,
-      borderStyle: "solid",
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
-      borderLeftWidth: 1,
-      borderRightWidth: 1,
-      padding: 0,
-    };
-
-    // Generate robot cells
+    const CELL = 18; // px — fixed size guarantees a square grid
+    const N = 40;
     const robotCells = generateRobotCells();
+    const items = [];
 
-    // Generate the grid
-    for (let i = 0; i < 20; i++) {
-      const cells = [
-        // Header cells
-        <td key={`h-${i}`} className="w-5 h-5 md:w-10 md:h-10 bg-gray-100">
-          <span className="text-gray-700 font-bold text-[0.6rem] md:text-sm ">
-            {19 - i}
+    for (let i = 0; i < N; i++) {
+      // Y-axis label (leftmost cell of each row)
+      items.push(
+        <div
+          key={`yl-${i}`}
+          style={{ width: CELL, height: CELL }}
+          className="bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden"
+        >
+          <span className="text-gray-600 font-bold leading-none select-none" style={{ fontSize: '6px' }}>
+            {N - 1 - i}
           </span>
-        </td>,
-      ];
+        </div>
+      );
 
-      for (let j = 0; j < 20; j++) {
+      for (let j = 0; j < N; j++) {
         let foundOb = null;
+        let foundObIsFaceCell = false;
         let foundRobotCell = null;
 
+        // 2x2 obstacle: SW corner at (ob.x, ob.y)
+        // grid row for algo y=ob.y   → N-1-ob.y  (rowBottom)
+        // grid row for algo y=ob.y+1 → N-2-ob.y  (rowTop)
         for (const ob of obstacles) {
-          const transformed = transformCoord(ob.x, ob.y);
-          if (transformed.x === i && transformed.y === j) {
+          const rowBottom = N - 1 - ob.y;
+          const rowTop    = N - 2 - ob.y;
+          const colLeft   = ob.x;
+          const colRight  = ob.x + 1;
+          if ((i === rowBottom || i === rowTop) && (j === colLeft || j === colRight)) {
             foundOb = ob;
+            if (ob.d === Direction.NORTH && i === rowTop)    foundObIsFaceCell = true;
+            if (ob.d === Direction.SOUTH && i === rowBottom) foundObIsFaceCell = true;
+            if (ob.d === Direction.EAST  && j === colRight)  foundObIsFaceCell = true;
+            if (ob.d === Direction.WEST  && j === colLeft)   foundObIsFaceCell = true;
             break;
           }
         }
 
         if (!foundOb) {
-          for (const cell of robotCells) {
-            if (cell.x === i && cell.y === j) {
-              foundRobotCell = cell;
-              break;
-            }
+          for (const rc of robotCells) {
+            if (rc.x === i && rc.y === j) { foundRobotCell = rc; break; }
           }
         }
 
-        const hoverClass = "cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-colors";
-        
         if (foundOb) {
-          if (foundOb.d === Direction.WEST) {
-            cells.push(
-              <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border border-l-4 border-l-rose-500 w-5 h-5 md:w-10 md:h-10 bg-slate-700 ${hoverClass}`} />
-            );
-          } else if (foundOb.d === Direction.EAST) {
-            cells.push(
-              <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border border-r-4 border-r-rose-500 w-5 h-5 md:w-10 md:h-10 bg-slate-700 ${hoverClass}`} />
-            );
-          } else if (foundOb.d === Direction.NORTH) {
-            cells.push(
-              <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border border-t-4 border-t-rose-500 w-5 h-5 md:w-10 md:h-10 bg-slate-700 ${hoverClass}`} />
-            );
-          } else if (foundOb.d === Direction.SOUTH) {
-            cells.push(
-              <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border border-b-4 border-b-rose-500 w-5 h-5 md:w-10 md:h-10 bg-slate-700 ${hoverClass}`} />
-            );
-          } else if (foundOb.d === Direction.SKIP) {
-            cells.push(
-              <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border w-5 h-5 md:w-10 md:h-10 bg-slate-700 ${hoverClass}`} />
-            );
+          let cls = 'bg-slate-700 border border-gray-600 cursor-pointer';
+          if (foundObIsFaceCell) {
+            if (foundOb.d === Direction.NORTH) cls = 'bg-slate-700 border border-gray-600 border-t-2 border-t-rose-500 cursor-pointer';
+            else if (foundOb.d === Direction.SOUTH) cls = 'bg-slate-700 border border-gray-600 border-b-2 border-b-rose-500 cursor-pointer';
+            else if (foundOb.d === Direction.EAST)  cls = 'bg-slate-700 border border-gray-600 border-r-2 border-r-rose-500 cursor-pointer';
+            else if (foundOb.d === Direction.WEST)  cls = 'bg-slate-700 border border-gray-600 border-l-2 border-l-rose-500 cursor-pointer';
           }
+          items.push(<div key={`${i}-${j}`} style={{ width: CELL, height: CELL }} className={cls} onClick={() => onGridClick(i, j)} />);
         } else if (foundRobotCell) {
-          if (foundRobotCell.d !== null) {
-            cells.push(
-              <td
-                key={`${i}-${j}`}
-                className={`border w-5 h-5 md:w-10 md:h-10 ${
-                  foundRobotCell.s != -1 ? "bg-rose-500" : "bg-amber-400"
-                }`}
-              />
-            );
-          } else {
-            cells.push(
-              <td key={`${i}-${j}`} className="bg-emerald-500 border-white border w-5 h-5 md:w-10 md:h-10" />
-            );
-          }
+          const cls = foundRobotCell.d !== null
+            ? `border border-white ${foundRobotCell.s !== -1 ? 'bg-rose-500' : 'bg-amber-400'}`
+            : 'bg-emerald-500 border border-white';
+          items.push(<div key={`${i}-${j}`} style={{ width: CELL, height: CELL }} className={cls} />);
         } else {
-          cells.push(
-            <td key={`${i}-${j}`} onClick={() => onGridClick(i, j)} className={`border-gray-200 border w-5 h-5 md:w-10 md:h-10 bg-white ${hoverClass}`} />
+          items.push(
+            <div
+              key={`${i}-${j}`}
+              style={{ width: CELL, height: CELL }}
+              className="border border-gray-200 bg-white cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => onGridClick(i, j)}
+            />
           );
         }
       }
-
-      rows.push(<tr key={`row-${i}`}>{cells}</tr>);
     }
 
-    const yAxis = [<td key="y-0" className="bg-gray-100" />];
-    for (let i = 0; i < 20; i++) {
-      yAxis.push(
-        <td key={`y-${i + 1}`} className="w-5 h-5 md:w-10 md:h-10 bg-gray-100">
-          <span className="text-gray-700 font-bold text-[0.6rem] md:text-sm ">
-            {i}
+    // X-axis labels (bottom row)
+    items.push(
+      <div key="corner" style={{ width: CELL, height: CELL }} className="bg-gray-100 border border-gray-300" />
+    );
+    for (let j = 0; j < N; j++) {
+      items.push(
+        <div
+          key={`xl-${j}`}
+          style={{ width: CELL, height: CELL }}
+          className="bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden"
+        >
+          <span className="text-gray-600 font-bold leading-none select-none" style={{ fontSize: '6px' }}>
+            {j}
           </span>
-        </td>
+        </div>
       );
     }
-    rows.push(<tr key="row-axis">{yAxis}</tr>);
-    return rows;
+
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: `${CELL}px repeat(${N}, ${CELL}px)` }}>
+        {items}
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -465,9 +447,9 @@ export default function Simulator() {
               <input
                 onChange={onChangeRobotX}
                 type="number"
-                placeholder="1"
-                min="1"
-                max="18"
+                placeholder="2"
+                min="2"
+                max="37"
                 value={robotX}
                 className="input input-bordered bg-white text-slate-900 font-medium w-20 border-gray-300"
               />
@@ -475,9 +457,9 @@ export default function Simulator() {
               <input
                 onChange={onChangeRobotY}
                 type="number"
-                placeholder="1"
-                min="1"
-                max="18"
+                placeholder="2"
+                min="2"
+                max="37"
                 value={robotY}
                 className="input input-bordered bg-white text-slate-900 font-medium w-20 border-gray-300"
               />
@@ -511,7 +493,7 @@ export default function Simulator() {
               type="number"
               placeholder="0"
               min="0"
-              max="19"
+              max="39"
               value={obXInput}
               className="input input-bordered bg-white text-slate-900 font-medium w-20 border-gray-300"
             />
@@ -521,7 +503,7 @@ export default function Simulator() {
               type="number"
               placeholder="0"
               min="0"
-              max="19"
+              max="39"
               value={obYInput}
               className="input input-bordered bg-white text-slate-900 font-medium w-20 border-gray-300"
             />
@@ -733,11 +715,9 @@ export default function Simulator() {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <table className="border-collapse border border-gray-300">
-          <tbody>{renderGrid()}</tbody>
-        </table>
-      </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 overflow-auto">
+          {renderGrid()}
+        </div>
       </div>
       </div>
     </div>

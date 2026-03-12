@@ -1,8 +1,10 @@
-from consts import WIDTH, HEIGHT, Direction
+from consts import WIDTH, HEIGHT, Direction, CELL_SIZE_CM
 
 
 def is_valid(center_x: int, center_y: int):
-    """Checks if given position is within bounds
+    """Checks if given position is within bounds.
+    Robot is 5x5 cells (half-width = 2), so the center must be at least 2 cells
+    from each wall to keep the full footprint inside the 40x40 arena.
 
     Inputs
     ------
@@ -13,7 +15,10 @@ def is_valid(center_x: int, center_y: int):
     -------
     bool: True if valid, False otherwise
     """
-    return center_x > 0 and center_y > 0 and center_x < WIDTH - 1 and center_y < HEIGHT - 1
+    robot_half = 2  # robot is 5x5 cells → half-width = 2
+    return (center_x >= robot_half and center_y >= robot_half
+            and center_x <= WIDTH - 1 - robot_half
+            and center_y <= HEIGHT - 1 - robot_half)
 
 
 def command_generator(states, obstacles):
@@ -44,14 +49,14 @@ def command_generator(states, obstacles):
         if states[i].direction == states[i - 1].direction:
             # Forward - Must be (east facing AND x value increased) OR (north facing AND y value increased)
             if (states[i].x > states[i - 1].x and states[i].direction == Direction.EAST) or (states[i].y > states[i - 1].y and states[i].direction == Direction.NORTH):
-                commands.append("FW10")
+                commands.append(f"FW{CELL_SIZE_CM:02d}")
             # Forward - Must be (west facing AND x value decreased) OR (south facing AND y value decreased)
             elif (states[i].x < states[i-1].x and states[i].direction == Direction.WEST) or (
                     states[i].y < states[i-1].y and states[i].direction == Direction.SOUTH):
-                commands.append("FW10")
+                commands.append(f"FW{CELL_SIZE_CM:02d}")
             # Backward - All other cases where the previous and current state is the same direction
             else:
-                commands.append("BW10")
+                commands.append(f"BW{CELL_SIZE_CM:02d}")
 
             # If any of these states has a valid screenshot ID, then add a SNAP command as well to take a picture
             if states[i].screenshot_id != -1:
@@ -240,24 +245,25 @@ def command_generator(states, obstacles):
 
     # Compress commands if there are consecutive forward or backward commands
     compressed_commands = [commands[0]]
+    MAX_STEP_CM = 9 * CELL_SIZE_CM  # max 9 cells per command
 
     for i in range(1, len(commands)):
         # If both commands are BW
         if commands[i].startswith("BW") and compressed_commands[-1].startswith("BW"):
             # Get the number of steps of previous command
             steps = int(compressed_commands[-1][2:])
-            # If steps are not 90, add 10 to the steps
-            if steps != 90:
-                compressed_commands[-1] = "BW{}".format(steps + 10)
+            # If steps are not at max, add CELL_SIZE_CM to the steps
+            if steps < MAX_STEP_CM:
+                compressed_commands[-1] = "BW{:02d}".format(steps + CELL_SIZE_CM)
                 continue
 
         # If both commands are FW
         elif commands[i].startswith("FW") and compressed_commands[-1].startswith("FW"):
             # Get the number of steps of previous command
             steps = int(compressed_commands[-1][2:])
-            # If steps are not 90, add 10 to the steps
-            if steps != 90:
-                compressed_commands[-1] = "FW{}".format(steps + 10)
+            # If steps are not at max, add CELL_SIZE_CM to the steps
+            if steps < MAX_STEP_CM:
+                compressed_commands[-1] = "FW{:02d}".format(steps + CELL_SIZE_CM)
                 continue
         
         # Otherwise, just add as usual
