@@ -97,12 +97,12 @@ class Obstacle(CellState):
                     cells.append(CellState(
                         self.x, self.y + 2 + EXPANDED_CELL * 2, Direction.SOUTH, self.obstacle_id, 0))
 
-                # Or (x + 1, y + 3)
-                if is_valid(self.x + 1, self.y + 1 + EXPANDED_CELL * 2):
-                    cells.append(CellState(self.x + 1, self.y + 1 + EXPANDED_CELL * 2, Direction.SOUTH, self.obstacle_id, SCREENSHOT_COST*10))
-                # Or (x - 1, y + 3)
-                if is_valid(self.x - 1, self.y + 1 + EXPANDED_CELL * 2):
-                    cells.append(CellState(self.x - 1, self.y + 1 + EXPANDED_CELL * 2, Direction.SOUTH, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x + 1, y + 3)
+                # if is_valid(self.x + 1, self.y + 1 + EXPANDED_CELL * 2):
+                #     cells.append(CellState(self.x + 1, self.y + 1 + EXPANDED_CELL * 2, Direction.SOUTH, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x - 1, y + 3)
+                # if is_valid(self.x - 1, self.y + 1 + EXPANDED_CELL * 2):
+                #     cells.append(CellState(self.x - 1, self.y + 1 + EXPANDED_CELL * 2, Direction.SOUTH, self.obstacle_id, SCREENSHOT_COST*10))
 
                 # Or (x + 1, y + 4)
                 if is_valid(self.x + 1, self.y + 2 + EXPANDED_CELL * 2):
@@ -144,12 +144,12 @@ class Obstacle(CellState):
                     cells.append(CellState(
                         self.x, self.y - 2 - EXPANDED_CELL * 2, Direction.NORTH, self.obstacle_id, 0))
 
-                # Or (x + 1, y - 3)
-                if is_valid(self.x + 1, self.y - 1 - EXPANDED_CELL * 2):
-                    cells.append(CellState(self.x + 1, self.y - 1 - EXPANDED_CELL * 2, Direction.NORTH, self.obstacle_id, SCREENSHOT_COST*10))
-                # Or (x - 1, y - 3)
-                if is_valid(self.x - 1, self.y - 1 - EXPANDED_CELL * 2):
-                    cells.append(CellState(self.x - 1, self.y - 1 - EXPANDED_CELL * 2, Direction.NORTH, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x + 1, y - 3)
+                # if is_valid(self.x + 1, self.y - 1 - EXPANDED_CELL * 2):
+                #     cells.append(CellState(self.x + 1, self.y - 1 - EXPANDED_CELL * 2, Direction.NORTH, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x - 1, y - 3)
+                # if is_valid(self.x - 1, self.y - 1 - EXPANDED_CELL * 2):
+                #     cells.append(CellState(self.x - 1, self.y - 1 - EXPANDED_CELL * 2, Direction.NORTH, self.obstacle_id, SCREENSHOT_COST*10))
 
                 # Or (x + 1, y - 4)
                 if is_valid(self.x + 1, self.y - 2 - EXPANDED_CELL * 2):
@@ -192,14 +192,14 @@ class Obstacle(CellState):
                     cells.append(CellState(self.x + 2 + EXPANDED_CELL * 2,
                                  self.y, Direction.WEST, self.obstacle_id, 0))
 
-                # Or (x + 3,y + 1)
-                if is_valid(self.x + 1 + EXPANDED_CELL * 2, self.y + 1):
-                    #print(f"Obstacle facing east, Adding {self.x + 2 + EXPANDED_CELL * 2}, {self.y + 1}")
-                    cells.append(CellState(self.x + 1 + EXPANDED_CELL * 2, self.y + 1, Direction.WEST, self.obstacle_id, SCREENSHOT_COST*10))
-                # Or (x + 3,y - 1)
-                if is_valid(self.x + 1 + EXPANDED_CELL * 2, self.y - 1):
-                    #print(f"Obstacle facing east, Adding {self.x + 2 + EXPANDED_CELL * 2}, {self.y - 1}")
-                    cells.append(CellState(self.x + 1 + EXPANDED_CELL * 2, self.y - 1, Direction.WEST, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x + 3,y + 1)
+                # if is_valid(self.x + 1 + EXPANDED_CELL * 2, self.y + 1):
+                #     #print(f"Obstacle facing east, Adding {self.x + 2 + EXPANDED_CELL * 2}, {self.y + 1}")
+                #     cells.append(CellState(self.x + 1 + EXPANDED_CELL * 2, self.y + 1, Direction.WEST, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x + 3,y - 1)
+                # if is_valid(self.x + 1 + EXPANDED_CELL * 2, self.y - 1):
+                #     #print(f"Obstacle facing east, Adding {self.x + 2 + EXPANDED_CELL * 2}, {self.y - 1}")
+                #     cells.append(CellState(self.x + 1 + EXPANDED_CELL * 2, self.y - 1, Direction.WEST, self.obstacle_id, SCREENSHOT_COST*10))
 
                 # Or (x + 4, y + 1)
                 if is_valid(self.x + 2 + EXPANDED_CELL * 2, self.y + 1):
@@ -244,12 +244,12 @@ class Obstacle(CellState):
                     cells.append(CellState(self.x - 2 - EXPANDED_CELL * 2,
                                  self.y, Direction.EAST, self.obstacle_id, 0))
 
-                # Or (x - 3,y + 1)
-                if is_valid(self.x - 1 - EXPANDED_CELL * 2, self.y + 1):
-                    cells.append(CellState(self.x - 1 - EXPANDED_CELL * 2, self.y + 1, Direction.EAST, self.obstacle_id, SCREENSHOT_COST*10))
-                # Or (x - 3,y - 1)
-                if is_valid(self.x - 1 - EXPANDED_CELL * 2, self.y - 1):
-                    cells.append(CellState(self.x - 1 - EXPANDED_CELL * 2, self.y - 1, Direction.EAST, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x - 3,y + 1)
+                # if is_valid(self.x - 1 - EXPANDED_CELL * 2, self.y + 1):
+                #     cells.append(CellState(self.x - 1 - EXPANDED_CELL * 2, self.y + 1, Direction.EAST, self.obstacle_id, SCREENSHOT_COST*10))
+                # # Or (x - 3,y - 1)
+                # if is_valid(self.x - 1 - EXPANDED_CELL * 2, self.y - 1):
+                #     cells.append(CellState(self.x - 1 - EXPANDED_CELL * 2, self.y - 1, Direction.EAST, self.obstacle_id, SCREENSHOT_COST*10))
 
                 # Or (x - 4, y + 1)
                 if is_valid(self.x - 2 - EXPANDED_CELL * 2, self.y + 1):
